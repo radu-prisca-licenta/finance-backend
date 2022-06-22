@@ -1,4 +1,4 @@
-const { DynamoDB, Lambda } = require('aws-sdk');
+const { DynamoDB} = require('aws-sdk');
 
 const TABLE_NAME = process.env.TABLE_NAME || '';
 const PRIMARY_KEY = process.env.PRIMARY_KEY || '';
@@ -45,7 +45,13 @@ exports.handler = async (event) => {
 
   try {
     await db.update(params).promise();
-    return { statusCode: 204, body: '' };
+    return { statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Headers" : "Content-Type",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+      },
+      body: '' };
   } catch (dbError) {
     const errorResponse = dbError.code === 'ValidationException' && dbError.message.includes('reserved keyword') ?
       DYNAMODB_EXECUTION_ERROR : RESERVED_RESPONSE;

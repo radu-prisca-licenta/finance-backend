@@ -1,4 +1,4 @@
-const { DynamoDB, Lambda } = require('aws-sdk');
+const { DynamoDB} = require('aws-sdk');
 
 const TABLE_NAME = process.env.TABLE_NAME || '';
 const PRIMARY_KEY = process.env.PRIMARY_KEY || '';
@@ -21,7 +21,13 @@ exports.handler = async (event) => {
 
   try {
     await db.delete(params).promise();
-    return { statusCode: 200, body: '' };
+    return { statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Headers" : "Content-Type",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+      },
+      body: '' };
   } catch (dbError) {
     return { statusCode: 500, body: JSON.stringify(dbError) };
   }

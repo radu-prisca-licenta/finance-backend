@@ -30,67 +30,131 @@ public class FinanceBackendStack extends Stack {
 
         TableProps tableProps;
         Attribute partitionKey = Attribute.builder()
-                .name("itemId")
+                .name("userId")
                 .type(AttributeType.STRING)
                 .build();
         tableProps = TableProps.builder()
-                .tableName("items")
+                .tableName("users")
                 .partitionKey(partitionKey)
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .build();
-        Table dynamodbTable = new Table(this, "items", tableProps);
+        Table dynamodbTable = new Table(this, "users", tableProps);
 
 
         Map<String, String> lambdaEnvMap = new HashMap<>();
         lambdaEnvMap.put("TABLE_NAME", dynamodbTable.getTableName());
-        lambdaEnvMap.put("PRIMARY_KEY", "itemId");
+        lambdaEnvMap.put("PRIMARY_KEY", "userId");
 
 
-        Function getOneItemFunction = new Function(this, "getOneItemFunction",
+        Function getOneUserFunction = new Function(this, "getOneUserFunction",
                 getLambdaFunctionProps(lambdaEnvMap, "get-one.handler"));
-        Function getAllItemsFunction = new Function(this, "getAllItemsFunction",
+        Function getAllUsersFunction = new Function(this, "getAllUsersFunction",
                 getLambdaFunctionProps(lambdaEnvMap, "get-all.handler"));
-        Function createItemFunction = new Function(this, "createItemFunction",
+        Function createUserFunction = new Function(this, "createUserFunction",
                 getLambdaFunctionProps(lambdaEnvMap, "create.handler"));
-        Function updateItemFunction = new Function(this, "updateItemFunction",
+        Function updateUserFunction = new Function(this, "updateUserFunction",
                 getLambdaFunctionProps(lambdaEnvMap, "update-one.handler"));
-        Function deleteItemFunction = new Function(this, "deleteItemFunction",
+        Function deleteUserFunction = new Function(this, "deleteUserFunction",
                 getLambdaFunctionProps(lambdaEnvMap, "delete-one.handler"));
 
 
-        dynamodbTable.grantReadWriteData(getOneItemFunction);
-        dynamodbTable.grantReadWriteData(getAllItemsFunction);
-        dynamodbTable.grantReadWriteData(createItemFunction);
-        dynamodbTable.grantReadWriteData(updateItemFunction);
-        dynamodbTable.grantReadWriteData(deleteItemFunction);
+        dynamodbTable.grantReadWriteData(getOneUserFunction);
+        dynamodbTable.grantReadWriteData(getAllUsersFunction);
+        dynamodbTable.grantReadWriteData(createUserFunction);
+        dynamodbTable.grantReadWriteData(updateUserFunction);
+        dynamodbTable.grantReadWriteData(deleteUserFunction);
 
-        RestApi api = new RestApi(this, "itemsApi",
-                RestApiProps.builder().restApiName("Items Service").build());
+        RestApi api = new RestApi(this, "usersApi",
+                RestApiProps.builder().restApiName("Users Service").build());
 
-        IResource items = api.getRoot().addResource("items");
+        IResource users = api.getRoot().addResource("users");
 
-        Integration getAllIntegration = new LambdaIntegration(getAllItemsFunction);
-        items.addMethod("GET", getAllIntegration);
+        Integration getAllIntegration = new LambdaIntegration(getAllUsersFunction);
+        users.addMethod("GET", getAllIntegration);
 
-        Integration createOneIntegration = new LambdaIntegration(createItemFunction);
-        items.addMethod("POST", createOneIntegration);
-        addCorsOptions(items);
+        Integration createOneIntegration = new LambdaIntegration(createUserFunction);
+        users.addMethod("POST", createOneIntegration);
+        addCorsOptions(users);
 
 
-        IResource singleItem = items.addResource("{id}");
-        Integration getOneIntegration = new LambdaIntegration(getOneItemFunction);
-        singleItem.addMethod("GET", getOneIntegration);
+        IResource singleUser = users.addResource("{id}");
+        Integration getOneIntegration = new LambdaIntegration(getOneUserFunction);
+        singleUser.addMethod("GET", getOneIntegration);
 
-        Integration updateOneIntegration = new LambdaIntegration(updateItemFunction);
-        singleItem.addMethod("PATCH", updateOneIntegration);
+        Integration updateOneIntegration = new LambdaIntegration(updateUserFunction);
+        singleUser.addMethod("PATCH", updateOneIntegration);
 
-        Integration deleteOneIntegration = new LambdaIntegration(deleteItemFunction);
-        singleItem.addMethod("DELETE", deleteOneIntegration);
-        addCorsOptions(singleItem);
+        Integration deleteOneIntegration = new LambdaIntegration(deleteUserFunction);
+        singleUser.addMethod("DELETE", deleteOneIntegration);
+
+        addCorsOptions(singleUser);
+
+        // Transactions
+
+        TableProps tableTransactionProps;
+        Attribute partitionTransactionKey = Attribute.builder()
+                .name("transactionId")
+                .type(AttributeType.STRING)
+                .build();
+        tableTransactionProps = TableProps.builder()
+                .tableName("transactions")
+                .partitionKey(partitionTransactionKey)
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .build();
+        Table dynamodbTransactionTable = new Table(this, "transactions", tableTransactionProps);
+
+
+        Map<String, String> lambdaEnvTransactionMap = new HashMap<>();
+        lambdaEnvTransactionMap.put("TABLE_NAME", dynamodbTransactionTable.getTableName());
+        lambdaEnvTransactionMap.put("PRIMARY_KEY", "transactionId");
+
+
+        Function getOneTransactionFunction = new Function(this, "getOneTransactionFunction",
+                getLambdaFunctionProps(lambdaEnvTransactionMap, "get-one.handler"));
+        Function getAllTransactionsFunction = new Function(this, "getAllTransactionsFunction",
+                getLambdaFunctionProps(lambdaEnvTransactionMap, "get-all.handler"));
+        Function createTransactionFunction = new Function(this, "createTransactionFunction",
+                getLambdaFunctionProps(lambdaEnvTransactionMap, "create.handler"));
+        Function updateTransactionFunction = new Function(this, "updateTransactionFunction",
+                getLambdaFunctionProps(lambdaEnvTransactionMap, "update-one.handler"));
+        Function deleteTransactionFunction = new Function(this, "deleteTransactionFunction",
+                getLambdaFunctionProps(lambdaEnvTransactionMap, "delete-one.handler"));
+
+
+        dynamodbTransactionTable.grantReadWriteData(getOneTransactionFunction);
+        dynamodbTransactionTable.grantReadWriteData(getAllTransactionsFunction);
+        dynamodbTransactionTable.grantReadWriteData(createTransactionFunction);
+        dynamodbTransactionTable.grantReadWriteData(updateTransactionFunction);
+        dynamodbTransactionTable.grantReadWriteData(deleteTransactionFunction);
+
+        RestApi transactionApi = new RestApi(this, "transactionsApi",
+                RestApiProps.builder().restApiName("Transactions Service").build());
+
+        IResource transactions = transactionApi.getRoot().addResource("transactions");
+
+        Integration getAllTransactionIntegration = new LambdaIntegration(getAllTransactionsFunction);
+        transactions.addMethod("GET", getAllTransactionIntegration);
+
+        Integration createOneTransactionIntegration = new LambdaIntegration(createTransactionFunction);
+        transactions.addMethod("POST", createOneTransactionIntegration);
+        addCorsOptions(transactions);
+
+
+        IResource singleTransaction = transactions.addResource("{id}");
+        Integration getOneTransactionIntegration = new LambdaIntegration(getOneTransactionFunction);
+        singleTransaction.addMethod("GET", getOneTransactionIntegration);
+
+        Integration updateOneTransactionIntegration = new LambdaIntegration(updateTransactionFunction);
+        singleTransaction.addMethod("PATCH", updateOneTransactionIntegration);
+
+        Integration deleteOneTransactionIntegration = new LambdaIntegration(deleteTransactionFunction);
+        singleTransaction.addMethod("DELETE", deleteOneTransactionIntegration);
+
+        addCorsOptions(singleTransaction);
     }
 
 
-    private void addCorsOptions(IResource item) {
+    private void addCorsOptions(IResource resource) {
         List<MethodResponse> methodResponses = new ArrayList<>();
 
         Map<String, Boolean> responseParameters = new HashMap<>();
@@ -125,7 +189,7 @@ public class FinanceBackendStack extends Stack {
                 .requestTemplates(requestTemplate)
                 .build();
 
-        item.addMethod("OPTIONS", methodIntegration, methodOptions);
+        resource.addMethod("OPTIONS", methodIntegration, methodOptions);
     }
 
     private FunctionProps getLambdaFunctionProps(Map<String, String> lambdaEnvMap, String handler) {
