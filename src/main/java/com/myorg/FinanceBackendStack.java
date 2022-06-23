@@ -151,6 +151,69 @@ public class FinanceBackendStack extends Stack {
         singleTransaction.addMethod("DELETE", deleteOneTransactionIntegration);
 
         addCorsOptions(singleTransaction);
+
+        // Cards
+
+        TableProps tableCardProps;
+        Attribute partitionCardKey = Attribute.builder()
+                .name("cardId")
+                .type(AttributeType.STRING)
+                .build();
+        tableCardProps = TableProps.builder()
+                .tableName("cards")
+                .partitionKey(partitionCardKey)
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .build();
+        Table dynamodbCardTable = new Table(this, "cards", tableCardProps);
+
+
+        Map<String, String> lambdaEnvCardMap = new HashMap<>();
+        lambdaEnvCardMap.put("TABLE_NAME", dynamodbCardTable.getTableName());
+        lambdaEnvCardMap.put("PRIMARY_KEY", "cardId");
+
+
+        Function getOneCardFunction = new Function(this, "getOneCardFunction",
+                getLambdaFunctionProps(lambdaEnvCardMap, "get-one.handler"));
+        Function getAllCardsFunction = new Function(this, "getAllCardsFunction",
+                getLambdaFunctionProps(lambdaEnvCardMap, "get-all.handler"));
+        Function createCardFunction = new Function(this, "createCardFunction",
+                getLambdaFunctionProps(lambdaEnvCardMap, "create.handler"));
+        Function updateCardFunction = new Function(this, "updateCardFunction",
+                getLambdaFunctionProps(lambdaEnvCardMap, "update-one.handler"));
+        Function deleteCardFunction = new Function(this, "deleteCardFunction",
+                getLambdaFunctionProps(lambdaEnvCardMap, "delete-one.handler"));
+
+
+        dynamodbCardTable.grantReadWriteData(getOneCardFunction);
+        dynamodbCardTable.grantReadWriteData(getAllCardsFunction);
+        dynamodbCardTable.grantReadWriteData(createCardFunction);
+        dynamodbCardTable.grantReadWriteData(updateCardFunction);
+        dynamodbCardTable.grantReadWriteData(deleteCardFunction);
+
+        RestApi cardApi = new RestApi(this, "cardsApi",
+                RestApiProps.builder().restApiName("Cards Service").build());
+
+        IResource cards = cardApi.getRoot().addResource("cards");
+
+        Integration getAllCardIntegration = new LambdaIntegration(getAllCardsFunction);
+        cards.addMethod("GET", getAllCardIntegration);
+
+        Integration createOneCardIntegration = new LambdaIntegration(createCardFunction);
+        cards.addMethod("POST", createOneCardIntegration);
+        addCorsOptions(cards);
+
+
+        IResource singleCard = cards.addResource("{id}");
+        Integration getOneCardIntegration = new LambdaIntegration(getOneCardFunction);
+        singleCard.addMethod("GET", getOneCardIntegration);
+
+        Integration updateOneCardIntegration = new LambdaIntegration(updateCardFunction);
+        singleCard.addMethod("PATCH", updateOneCardIntegration);
+
+        Integration deleteOneCardIntegration = new LambdaIntegration(deleteCardFunction);
+        singleCard.addMethod("DELETE", deleteOneCardIntegration);
+
+        addCorsOptions(singleCard);
     }
 
 
