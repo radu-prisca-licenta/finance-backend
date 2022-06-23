@@ -28,6 +28,7 @@ public class FinanceBackendStack extends Stack {
     public FinanceBackendStack(final Construct parent, final String id, final StackProps props) {
         super(parent, id, props);
 
+        // defining the user table for the backend
         TableProps tableProps;
         Attribute partitionKey = Attribute.builder()
                 .name("userId")
@@ -40,6 +41,7 @@ public class FinanceBackendStack extends Stack {
                 .build();
         Table dynamodbTable = new Table(this, "users", tableProps);
 
+        // defining the user lambda functions for the backend
 
         Map<String, String> lambdaEnvMap = new HashMap<>();
         lambdaEnvMap.put("TABLE_NAME", dynamodbTable.getTableName());
@@ -58,12 +60,15 @@ public class FinanceBackendStack extends Stack {
                 getLambdaFunctionProps(lambdaEnvMap, "delete-one.handler"));
 
 
+        //attaching the lambda functions to the API gateway and dynamoDB
         dynamodbTable.grantReadWriteData(getOneUserFunction);
         dynamodbTable.grantReadWriteData(getAllUsersFunction);
         dynamodbTable.grantReadWriteData(createUserFunction);
         dynamodbTable.grantReadWriteData(updateUserFunction);
         dynamodbTable.grantReadWriteData(deleteUserFunction);
 
+
+        //defining the user API gateway
         RestApi api = new RestApi(this, "usersApi",
                 RestApiProps.builder().restApiName("Users Service").build());
 
@@ -154,6 +159,7 @@ public class FinanceBackendStack extends Stack {
 
         // Cards
 
+        //defining the cards lambda functions for the backend
         TableProps tableCardProps;
         Attribute partitionCardKey = Attribute.builder()
                 .name("cardId")
